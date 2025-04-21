@@ -2,6 +2,11 @@
 
 A simple and efficient 4-channel logic analyzer built with an STM32F103-based Nucleo board. It captures digital signals and streams them to a PC over UART using DMA. A Python script with Matplotlib visualizes the signals in real time.
 
+
+Below is a sample capture from the Python GUI:
+
+![Demo Screenshot](images/demo1.png)
+
 ---
 
 ## ✅ Objective
