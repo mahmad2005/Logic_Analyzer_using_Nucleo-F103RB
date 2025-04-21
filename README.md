@@ -155,3 +155,115 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
 | Marker Byte    | 0xAA              |
 | UART Method    | DMA               |
 | Buffering      | Double Buffering  |
+
+
+
+# 🖥️ Python GUI for STM32 Logic Analyzer
+
+This Python-based application provides a **real-time GUI** for visualizing digital logic signals captured and streamed over UART by an STM32F103RB microcontroller.
+
+## 🎯 Objective
+
+To **read, decode, and plot** logic signals from the STM32 logic analyzer firmware in real-time, supporting:
+- **Triggering** (Rising/Falling edge)
+- **Run/Stop** control
+- **Live Frequency Measurement**
+- **Window Resizing**
+- **Interactive GUI with Matplotlib**
+
+---
+
+## 💻 Features
+
+| Feature              | Description                                                                 |
+|----------------------|-----------------------------------------------------------------------------|
+| 4-Channel Plot       | CH0–CH3 visualized with clear separation                                    |
+| Auto/Manual Trigger  | Trigger on rising/falling edge of selected channel                          |
+| Adjustable Window    | Slider to set how many samples are displayed (100–500,000)                  |
+| Frequency Estimation | Detects rising edge frequency of selected channel                           |
+| Real-time Streaming  | Smooth updates at ~20 FPS using `matplotlib.animation.FuncAnimation`        |
+| Responsive UI        | Buttons and radio controls for interactivity                                |
+
+---
+
+## 🧠 Key Concepts
+
+### 📡 Data Format (From MCU)
+
+- STM32 sends:
+  - A **marker byte**: `0xAA`
+  - Followed by **1000 packed logic samples** (1 byte = 4-bit logic input)
+- Each bit in a byte represents the logic level of one GPIO channel at a sampling instant.
+
+### 🧪 Triggering
+
+- GUI waits for a rising/falling edge on a selected channel before plotting
+- Clears buffer on trigger event to show waveform from trigger point
+
+### 🧮 Frequency Measurement
+
+- Detects **rising edges** on the selected channel
+- Computes average period between edges
+- Displays real-time frequency label in top-left
+
+### 🖼 GUI Components
+
+- **Matplotlib Plot**:
+  - Channel separation with offsets
+  - Time axis labeled in **microseconds**
+- **Tk Widgets**:
+  - Run/Stop button
+  - Trigger ON/OFF
+  - Channel and Edge selectors
+  - Buffer size slider
+  - Frequency label
+
+---
+
+## 🚀 Usage
+
+### Requirements
+```bash
+pip install pyserial matplotlib
+```
+
+### Run the GUI
+```bash
+python Logic_Analyzer_App.py
+```
+
+> Ensure your MCU is connected via USB and transmitting data with the correct marker byte `0xAA`.
+
+---
+
+## 🛠 Configuration
+
+Inside `Logic_Analyzer_App.py`:
+
+| Variable           | Description                                 |
+|--------------------|---------------------------------------------|
+| `SAMPLE_COUNT`     | Number of samples per frame (default: 1000) |
+| `sampling_rate_hz` | Sampling rate from MCU (e.g., 83.33 kHz)    |
+| `ser = serial.Serial(...)` | Adjust COM port and baud rate if needed  |
+
+---
+
+## 📷 Sample UI
+
+![Sample Screenshot](images/demo1.png)
+
+---
+
+## ✅ Summary
+
+| Feature            | Value                     |
+|--------------------|---------------------------|
+| Channels           | 4                         |
+| Trigger Modes      | Rising/Falling            |
+| Frequency Display  | Yes (Rising Edge)         |
+| Serial Marker Byte | `0xAA`                    |
+| Data Transport     | UART (921600 bps)         |
+| GUI Framework      | Matplotlib + Tkinter      |
+| Buffer Size        | Adjustable (100–500,000)  |
+
+GUI part is developed by "Vibe Coding" 
