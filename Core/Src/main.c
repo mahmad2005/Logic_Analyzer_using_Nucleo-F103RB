@@ -52,13 +52,10 @@ volatile uint16_t sample_index = 0;
 volatile uint8_t sampling_done = 0;
 volatile uint8_t uart_tx_done = 1;
 uint8_t marker = 0xAA;
-//uint8_t tx_buffer[SAMPLE_COUNT + 1];
-int counter = 0;
 
 volatile uint8_t buffer1[SAMPLE_COUNT];
 volatile uint8_t buffer2[SAMPLE_COUNT];
 volatile uint8_t* current_buffer = buffer1;
-volatile uint8_t* tx_buffer = NULL;
 
 static uint8_t tx_packet[SAMPLE_COUNT + 1];
 
@@ -122,12 +119,8 @@ int main(void)
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
-  HAL_TIM_Base_Start_IT(&htim2);  // <<< ADD THIS LINE
-  HAL_TIM_Base_Start_IT(&htim3);
-//  __HAL_TIM_ENABLE_IT(&htim2, TIM_IT_UPDATE);  // << Manually enable update interrupt
-//  __HAL_TIM_SET_COUNTER(&htim2, 0);
-//  __HAL_TIM_CLEAR_FLAG(&htim2, TIM_FLAG_UPDATE);
-//  TIM2->EGR = TIM_EGR_UG;  // << THIS TRIGGERS THE TIMER
+  HAL_TIM_Base_Start_IT(&htim2);  // Sampling Timer
+  HAL_TIM_Base_Start_IT(&htim3);  // Timer3 for generating test frequency
 
 
 
@@ -141,11 +134,7 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 	  while (!sampling_done);  // Wait until sampling completes
-
-	  //HAL_UART_Transmit(&huart2, samples, SAMPLE_COUNT, HAL_MAX_DELAY); // Send to PC
-	  //printf("Samples: %d \r\n", samples);
 	  sampling_done = 0;
-	  //while (!uart_tx_done);  // Optional if you want to ensure one transfer at a time
   }
   /* USER CODE END 3 */
 }
@@ -409,26 +398,14 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
       uint8_t bit2 = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_4);
       uint8_t bit3 = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_0);
       uint8_t packed = (bit0 << 0) | (bit1 << 1) | (bit2 << 2) | (bit3 << 3);
-      //samples[sample_index++] = packed;
       current_buffer[sample_index++] = packed;
     } else {
-      //HAL_TIM_Base_Stop_IT(&htim2);
       sampling_done = 1;
       sample_index = 0;
-      //counter++;
-      //printf("Samples: %d \r\n", samples);
-
-      //HAL_UART_Transmit(&huart2, &marker, 1, HAL_MAX_DELAY);            // Send sync byte
-      //HAL_UART_Transmit(&huart2, samples, SAMPLE_COUNT, HAL_MAX_DELAY); // Send 10 bytes of data
-//      tx_buffer[0] = marker;  // Sync byte
-//      memcpy(&tx_buffer[1], samples, SAMPLE_COUNT);
-//      uart_tx_done = 0;
-//      HAL_UART_Transmit_DMA(&huart2, tx_buffer, SAMPLE_COUNT + 1);
 
       if (uart_tx_done) {
           tx_packet[0] = marker;
           memcpy(&tx_packet[1], (const void*)current_buffer, SAMPLE_COUNT);
-          tx_buffer = current_buffer;
           current_buffer = (current_buffer == buffer1) ? buffer2 : buffer1;
           uart_tx_done = 0;
           HAL_UART_Transmit_DMA(&huart2, tx_packet, SAMPLE_COUNT + 1);
@@ -437,8 +414,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   }
 
   if(htim->Instance == TIM3) {
-	  //HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_0);
-	  //counter++;
 	  static uint8_t state = 0;
 	  if (state == 0)
 	      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0, GPIO_PIN_SET);
@@ -454,7 +429,6 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
   if (huart->Instance == USART2)
   {
     uart_tx_done = 1;
-    //HAL_TIM_Base_Start_IT(&htim2);
   }
 }
 /* USER CODE END 4 */
