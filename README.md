@@ -250,7 +250,7 @@ Inside `Logic_Analyzer_App.py`:
 
 ## 📷 Sample UI
 
-![Sample Screenshot](images/demo1.png)
+![Sample Screenshot](images/3png.png)
 
 ---
 
